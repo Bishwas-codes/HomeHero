@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Accounts - Admin - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h2 class="fw-bold text-secondary mb-0">Customer Accounts</h2>
+            <p class="text-muted small">View all registered customers and account states</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-custom btn-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card-custom bg-white shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted">
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Registered Date</th>
+                        <th>Total Bookings</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    {% for c in customers %}
+                    <tr>
+                        <td class="fw-bold">#{{ c.id }}</td>
+                        <td class="fw-semibold text-dark">{{ c.name }}</td>
+                        <td>{{ c.email }}</td>
+                        <td>{{ c.phone }}</td>
+                        <td>{{ c.created_at.strftime('%d %b %Y') }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ c.customer_requests.count() }}</span>
+                        </td>
+                        <td>
+                            {% if c.status == 'active' %}
+                                <span class="badge bg-success-subtle text-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Suspended</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('admin.toggle_user_status', user_id=c.id) }}" method="POST">
+                                <button type="submit" class="btn btn-sm {% if c.status == 'active' %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                    {{ 'Suspend' if c.status == 'active' else 'Activate' }}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">No customer accounts registered yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

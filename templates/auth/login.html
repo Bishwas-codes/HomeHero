@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Login - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center g-4">
+        
+        <!-- Standard Login Form -->
+        <div class="col-lg-5 col-md-8">
+            <div class="card-custom p-4 bg-white shadow-md">
+                <div class="text-center mb-4">
+                    <div class="brand-icon mx-auto mb-2" style="width: 48px; height: 48px; font-size: 1.4rem;">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <h3 class="fw-bold text-secondary">Account Login</h3>
+                    <p class="text-muted small">Sign in to access your portal</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-regular fa-envelope text-muted"></i></span>
+                            <input type="email" name="email" class="form-control" placeholder="name@example.com" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-key text-muted"></i></span>
+                            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="remember" id="remember" checked>
+                            <label class="form-check-label small text-muted" for="remember">Remember me</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2 fw-bold">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-2"></i> Log In
+                    </button>
+                </form>
+
+                <div class="text-center mt-4 pt-3 border-top small text-muted">
+                    Don't have an account yet? <br>
+                    <a href="{{ url_for('auth.register_customer') }}" class="fw-bold text-primary text-decoration-none">Sign up as Customer</a>
+                    <span class="mx-1">•</span>
+                    <a href="{{ url_for('auth.register_worker') }}" class="fw-bold text-secondary text-decoration-none">Join as Worker</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1-Click Viva Demo Login Quick Panel -->
+        <div class="col-lg-6 col-md-10">
+            <div class="card-custom p-4 bg-white border-primary border-2 shadow-sm">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-primary px-2 py-1"><i class="fa-solid fa-graduation-cap me-1"></i> Viva Examiner Tool</span>
+                    <h5 class="fw-bold mb-0 text-secondary">1-Click Fast Demo Logins</h5>
+                </div>
+                <p class="text-muted small mb-3">Click any button below to instantly authenticate without typing credentials:</p>
+
+                <div class="row g-2">
+                    <!-- Customer Demo -->
+                    <div class="col-12">
+                        <a href="{{ url_for('auth.demo_login', role_key='customer') }}" class="btn btn-outline-primary d-flex justify-content-between align-items-center p-2 text-start w-100">
+                            <div>
+                                <div class="fw-bold"><i class="fa-solid fa-user me-2 text-info"></i> Customer: Sneha Roy</div>
+                                <div class="smaller text-muted">customer@example.com (Pass: Customer@123)</div>
+                            </div>
+                            <span class="badge bg-info text-dark">Customer Panel &rarr;</span>
+                        </a>
+                    </div>
+
+                    <!-- Plumber Demo -->
+                    <div class="col-sm-6">
+                        <a href="{{ url_for('auth.demo_login', role_key='plumber') }}" class="btn btn-outline-secondary d-flex flex-column p-2 text-start w-100">
+                            <div class="fw-bold text-dark"><i class="fa-solid fa-faucet-drip me-1 text-primary"></i> Rahul Sharma</div>
+                            <div class="smaller text-muted">Plumber (Paltan Bazaar)</div>
+                            <div class="smaller text-primary fw-semibold mt-1">rahul@example.com</div>
+                        </a>
+                    </div>
+
+                    <!-- Electrician Demo -->
+                    <div class="col-sm-6">
+                        <a href="{{ url_for('auth.demo_login', role_key='electrician') }}" class="btn btn-outline-secondary d-flex flex-column p-2 text-start w-100">
+                            <div class="fw-bold text-dark"><i class="fa-solid fa-bolt me-1 text-warning"></i> Amit Das</div>
+                            <div class="smaller text-muted">Electrician (GS Road)</div>
+                            <div class="smaller text-primary fw-semibold mt-1">amit@example.com</div>
+                        </a>
+                    </div>
+
+                    <!-- Cleaner Demo -->
+                    <div class="col-sm-6">
+                        <a href="{{ url_for('auth.demo_login', role_key='cleaner') }}" class="btn btn-outline-secondary d-flex flex-column p-2 text-start w-100">
+                            <div class="fw-bold text-dark"><i class="fa-solid fa-broom me-1 text-success"></i> Rohit Kalita</div>
+                            <div class="smaller text-muted">Deep Cleaning (Zoo Road)</div>
+                            <div class="smaller text-primary fw-semibold mt-1">rohit@example.com</div>
+                        </a>
+                    </div>
+
+                    <!-- AC & Appliance Demo -->
+                    <div class="col-sm-6">
+                        <a href="{{ url_for('auth.demo_login', role_key='ac_repair') }}" class="btn btn-outline-secondary d-flex flex-column p-2 text-start w-100">
+                            <div class="fw-bold text-dark"><i class="fa-solid fa-snowflake me-1 text-info"></i> Priya Boro</div>
+                            <div class="smaller text-muted">AC & Appliances (Dispur)</div>
+                            <div class="smaller text-primary fw-semibold mt-1">priya@example.com</div>
+                        </a>
+                    </div>
+
+                    <!-- Admin Demo -->
+                    <div class="col-12 mt-2">
+                        <a href="{{ url_for('auth.demo_login', role_key='admin') }}" class="btn btn-outline-danger d-flex justify-content-between align-items-center p-2 text-start w-100">
+                            <div>
+                                <div class="fw-bold text-danger"><i class="fa-solid fa-shield-halved me-2"></i> Platform Administrator</div>
+                                <div class="smaller text-muted">admin@example.com (Pass: Admin@123)</div>
+                            </div>
+                            <span class="badge bg-danger text-white">Admin Dashboard &rarr;</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

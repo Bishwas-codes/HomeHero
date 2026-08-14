@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Worker Management - Admin - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h2 class="fw-bold text-secondary mb-0">Worker Verification & Management</h2>
+            <p class="text-muted small">Approve, activate, deactivate, or suspend service provider accounts</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-custom btn-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card-custom bg-white shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted">
+                    <tr>
+                        <th>Worker</th>
+                        <th>Phone & Email</th>
+                        <th>Services Offered</th>
+                        <th>Base Area</th>
+                        <th>Rating / Jobs</th>
+                        <th>Approval</th>
+                        <th>Account Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    {% for w in workers %}
+                    {% set p = w.worker_profile %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">
+                                    {{ w.name[0] }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ w.name }}</div>
+                                    <div class="smaller text-muted">{{ p.experience_years if p else 1 }} yrs exp • ₹{{ p.hourly_rate|round|int if p else 300 }}/hr</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ w.phone }}</div>
+                            <div class="text-muted smaller">{{ w.email }}</div>
+                        </td>
+                        <td>
+                            {% if p and p.services %}
+                                <div class="d-flex flex-wrap gap-1" style="max-width: 200px;">
+                                    {% for s in p.services %}
+                                        <span class="badge bg-light text-dark border smaller">{{ s.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <span class="text-muted">None</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>{{ p.location_name if p else 'N/A' }}</div>
+                            <div class="smaller text-muted">Lat: {{ p.latitude if p else '-' }}, Lng: {{ p.longitude if p else '-' }}</div>
+                        </td>
+                        <td>
+                            {% if p %}
+                                <span class="badge bg-warning text-dark"><i class="fa-solid fa-star"></i> {{ p.rating_avg }}</span>
+                                <span class="text-muted smaller ms-1">({{ p.total_jobs_completed }} jobs)</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p and p.is_approved %}
+                                <span class="badge bg-success">Approved</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if w.status == 'active' %}
+                                <span class="badge bg-success-subtle text-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Suspended</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <form action="{{ url_for('admin.toggle_worker_approval', user_id=w.id) }}" method="POST">
+                                    <button type="submit" class="btn btn-sm {% if p and p.is_approved %}btn-outline-warning text-dark{% else %}btn-success{% endif %}" title="Toggle Approval">
+                                        {{ 'Revoke' if p and p.is_approved else 'Approve' }}
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('admin.toggle_user_status', user_id=w.id) }}" method="POST">
+                                    <button type="submit" class="btn btn-sm {% if w.status == 'active' %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="Suspend/Activate">
+                                        {{ 'Suspend' if w.status == 'active' else 'Activate' }}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">No registered workers found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

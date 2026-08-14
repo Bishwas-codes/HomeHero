@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Register as Service Provider / Worker - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-custom p-4 p-md-5 bg-white shadow-md">
+                <div class="text-center mb-4">
+                    <div class="brand-icon mx-auto mb-2" style="width: 48px; height: 48px; font-size: 1.4rem;">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                    </div>
+                    <h3 class="fw-bold text-secondary">Service Provider / Worker Registration</h3>
+                    <p class="text-muted small">Join HomeHero network to receive nearby household service requests</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.register_worker') }}">
+                    
+                    <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">1. Personal & Contact Information</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Full Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Rahul Sharma" required autofocus>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Phone Number</label>
+                            <input type="tel" name="phone" class="form-control" placeholder="+91 97XXXXXXXX" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Email Address</label>
+                            <input type="email" name="email" class="form-control" placeholder="rahul@example.com" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold small">Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Min 6 chars" required minlength="6">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold small">Confirm Password</label>
+                            <input type="password" name="confirm_password" class="form-control" placeholder="Repeat" required minlength="6">
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">2. Services Offered (Select all that apply)</h5>
+                    <div class="row g-2 mb-4">
+                        {% for cat in categories %}
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-check p-2 border rounded bg-light">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" name="services" value="{{ cat.id }}" id="cat_{{ cat.id }}">
+                                <label class="form-check-label fw-semibold small text-dark" for="cat_{{ cat.id }}">
+                                    <i class="fa-solid {{ cat.icon }} text-primary me-1"></i> {{ cat.name }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">3. Professional Experience & Rates</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Years of Experience</label>
+                            <div class="input-group">
+                                <input type="number" name="experience" class="form-control" value="3" min="1" max="40" required>
+                                <span class="input-group-text">Years</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Hourly Visiting / Base Rate</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" name="hourly_rate" class="form-control" value="300" step="50" min="100" required>
+                                <span class="input-group-text">/ hour</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small">Short Bio / Highlights</label>
+                            <textarea name="bio" class="form-control" rows="2" placeholder="e.g. Certified plumber with 5+ years experience in sanitary pipelines and leakage repairs."></textarea>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">4. Base Working Location (For 10 km Matching)</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Select Demo Area / City</label>
+                            <select class="form-select" id="demo-location-select">
+                                <option value="">-- Choose Demo Neighborhood --</option>
+                                {% for loc in demo_locations %}
+                                    <option value="{{ loc.name }}" data-lat="{{ loc.lat }}" data-lng="{{ loc.lng }}" data-name="{{ loc.name }}">
+                                        {{ loc.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Base Area Name</label>
+                            <input type="text" name="location_name" id="location-name-input" class="form-control" value="Paltan Bazaar, Guwahati" required>
+                        </div>
+                        
+                        <!-- Hidden / Pre-filled coordinates -->
+                        <input type="hidden" name="latitude" id="latitude-input" value="26.1820">
+                        <input type="hidden" name="longitude" id="longitude-input" value="91.7510">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-3 fw-bold fs-6">
+                        <i class="fa-solid fa-id-card me-2"></i> Complete Worker Registration
+                    </button>
+                </form>
+
+                <div class="text-center mt-4 pt-3 border-top small text-muted">
+                    Already registered? <a href="{{ url_for('auth.login') }}" class="fw-bold text-primary text-decoration-none">Log in here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

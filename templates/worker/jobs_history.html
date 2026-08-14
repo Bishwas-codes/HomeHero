@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Worker Earnings & Completed Jobs - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h2 class="fw-bold text-secondary mb-0">Earnings & Jobs Ledger</h2>
+            <p class="text-muted small">Overview of all accepted, completed, and rated jobs</p>
+        </div>
+        <a href="{{ url_for('worker.dashboard') }}" class="btn btn-primary-custom btn-sm">
+            <i class="fa-solid fa-radar me-1"></i> Open Radar
+        </a>
+    </div>
+
+    <!-- Earnings Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-success-subtle text-success">
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">₹{{ total_earnings|round|int }}</div>
+                    <div class="kpi-label">Total Completed Revenue</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-primary-light text-primary">
+                    <i class="fa-solid fa-briefcase"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ completed_jobs|length }}</div>
+                    <div class="kpi-label">Completed Services</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ current_user.worker_profile.rating_avg }} <span class="fs-6 text-muted">/5</span></div>
+                    <div class="kpi-label">{{ reviews|length }} Customer Reviews</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jobs Table -->
+    <div class="card-custom bg-white shadow-sm mb-4">
+        <div class="card-header-custom">
+            <i class="fa-solid fa-list-check me-2 text-primary"></i> Service Requests Handled
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted">
+                    <tr>
+                        <th>Req #</th>
+                        <th>Service</th>
+                        <th>Customer</th>
+                        <th>Issue</th>
+                        <th>Location</th>
+                        <th>Earnings</th>
+                        <th>Accepted At</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    {% for job in jobs %}
+                    <tr>
+                        <td class="fw-bold">#{{ job.id }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                <i class="fa-solid {{ job.service.icon }} text-primary me-1"></i> {{ job.service.name }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-dark">{{ job.customer.name }}</span>
+                            <div class="smaller text-muted">{{ job.customer.phone }}</div>
+                        </td>
+                        <td class="fw-semibold">{{ job.title }}</td>
+                        <td>{{ job.location_name or job.address }}</td>
+                        <td class="text-success fw-bold">₹{{ job.budget|round|int if job.budget else job.service.base_price|round|int }}</td>
+                        <td>{{ job.accepted_at.strftime('%d %b %Y, %I:%M %p') if job.accepted_at else '-' }}</td>
+                        <td>
+                            <span class="badge {{ job.status_badge_class() }}">{{ job.status.replace('_', ' ') }}</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">No jobs handled yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Customer Reviews & Feedback Received -->
+    <div class="card-custom bg-white shadow-sm">
+        <div class="card-header-custom">
+            <i class="fa-solid fa-star me-2 text-warning"></i> Customer Feedback & Ratings
+        </div>
+        <div class="p-4">
+            <div class="row g-3">
+                {% for rev in reviews %}
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold text-dark">{{ rev.customer.name }}</span>
+                            <div class="text-warning">
+                                {% for i in range(rev.rating) %}<i class="fa-solid fa-star"></i>{% endfor %}
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-1 fst-italic">"{{ rev.comment }}"</p>
+                        <span class="text-muted smaller"><i class="fa-regular fa-clock me-1"></i> {{ rev.created_at.strftime('%d %b %Y') }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12 text-center text-muted py-3">
+                    No customer reviews received yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

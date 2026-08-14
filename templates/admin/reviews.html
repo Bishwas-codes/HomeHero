@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Reviews & Ratings - Admin - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h2 class="fw-bold text-secondary mb-0">Platform Reviews & Moderation</h2>
+            <p class="text-muted small">Monitor customer feedback ratings across all service providers</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-custom btn-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card-custom bg-white shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted">
+                    <tr>
+                        <th>Req #</th>
+                        <th>Customer</th>
+                        <th>Worker</th>
+                        <th>Rating</th>
+                        <th>Feedback Comment</th>
+                        <th>Submitted Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    {% for rev in reviews %}
+                    <tr>
+                        <td class="fw-bold">#{{ rev.request_id }}</td>
+                        <td>{{ rev.customer.name }}</td>
+                        <td>
+                            <span class="fw-bold text-primary">{{ rev.worker.name }}</span>
+                        </td>
+                        <td>
+                            <div class="text-warning">
+                                {% for i in range(rev.rating) %}<i class="fa-solid fa-star"></i>{% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fst-italic text-dark">"{{ rev.comment }}"</div>
+                        </td>
+                        <td>{{ rev.created_at.strftime('%d %b %Y') }}</td>
+                        <td>
+                            <form action="{{ url_for('admin.delete_review', review_id=rev.id) }}" method="POST" onsubmit="return confirm('Delete this review?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Review">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No reviews recorded on the platform.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

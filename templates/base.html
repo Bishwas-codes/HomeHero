@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HomeHero - Household Service Marketplace{% endblock %}</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Custom Application CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- =========================================================================
+         Top Viva / Demonstration Quick Switcher Bar
+         ========================================================================= -->
+    <div class="viva-banner">
+        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary"><i class="fa-solid fa-graduation-cap me-1"></i> Viva Demo Switcher</span>
+                <span class="text-light d-none d-md-inline small">1-Click Role Login:</span>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-1">
+                <a href="{{ url_for('auth.demo_login', role_key='customer') }}" class="viva-pill" title="Login as Customer (Sneha Roy)">
+                    <i class="fa-solid fa-user text-info"></i> Customer
+                </a>
+                <a href="{{ url_for('auth.demo_login', role_key='plumber') }}" class="viva-pill" title="Login as Rahul Sharma (Plumber)">
+                    <i class="fa-solid fa-faucet-drip text-primary"></i> Plumber
+                </a>
+                <a href="{{ url_for('auth.demo_login', role_key='electrician') }}" class="viva-pill" title="Login as Amit Das (Electrician)">
+                    <i class="fa-solid fa-bolt text-warning"></i> Electrician
+                </a>
+                <a href="{{ url_for('auth.demo_login', role_key='cleaner') }}" class="viva-pill" title="Login as Rohit Kalita (Cleaner)">
+                    <i class="fa-solid fa-broom text-success"></i> Cleaner
+                </a>
+                <a href="{{ url_for('auth.demo_login', role_key='admin') }}" class="viva-pill" title="Login as Admin">
+                    <i class="fa-solid fa-shield-halved text-danger"></i> Admin
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         Main Navigation Bar
+         ========================================================================= -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-house-chimney-crack"></i>
+                </div>
+                <span>Home<span class="text-primary">Hero</span></span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}"><i class="fa-solid fa-house me-1"></i> Home</a>
+                    </li>
+                    
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'customer' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('customer.dashboard') }}"><i class="fa-solid fa-gauge me-1"></i> Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-primary fw-bold" href="{{ url_for('customer.book_service') }}"><i class="fa-solid fa-plus-circle me-1"></i> Book Service</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('customer.history') }}"><i class="fa-solid fa-clock-rotate-left me-1"></i> My Bookings</a>
+                            </li>
+                        {% elif current_user.role == 'worker' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('worker.dashboard') }}"><i class="fa-solid fa-radar me-1"></i> Radar & Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('worker.active_job') }}"><i class="fa-solid fa-briefcase me-1"></i> Active Job</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('worker.jobs_history') }}"><i class="fa-solid fa-wallet me-1"></i> Earnings & History</a>
+                            </li>
+                        {% elif current_user.role == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fa-solid fa-chart-line me-1"></i> Admin Panel</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.workers') }}"><i class="fa-solid fa-users-gear me-1"></i> Workers</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.requests') }}"><i class="fa-solid fa-list-check me-1"></i> All Bookings</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.services') }}"><i class="fa-solid fa-screwdriver-wrench me-1"></i> Services</a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+
+                <!-- Right-aligned Auth & User Controls -->
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                                <span class="badge bg-secondary rounded-pill px-2 py-1">
+                                    {{ current_user.role.upper() }}
+                                </span>
+                                <span class="fw-bold text-dark">{{ current_user.name }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li class="dropdown-header text-muted small">Signed in as {{ current_user.email }}</li>
+                                <li><hr class="dropdown-divider"></li>
+                                {% if current_user.role == 'customer' %}
+                                    <li><a class="dropdown-item" href="{{ url_for('customer.profile') }}"><i class="fa-solid fa-user me-2"></i> My Profile</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('customer.history') }}"><i class="fa-solid fa-history me-2"></i> Booking History</a></li>
+                                {% elif current_user.role == 'worker' %}
+                                    <li><a class="dropdown-item" href="{{ url_for('worker.profile') }}"><i class="fa-solid fa-id-badge me-2"></i> Worker Profile & Rates</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('worker.jobs_history') }}"><i class="fa-solid fa-star me-2"></i> Ratings & Reviews</a></li>
+                                {% elif current_user.role == 'admin' %}
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="fa-solid fa-gear me-2"></i> Admin Settings</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}"><i class="fa-solid fa-right-to-bracket me-1"></i> Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary-custom" href="{{ url_for('auth.register_customer') }}">
+                                <i class="fa-solid fa-user-plus me-1"></i> Register as Customer
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-custom" href="{{ url_for('auth.register_worker') }}">
+                                <i class="fa-solid fa-screwdriver-wrench me-1"></i> Join as Worker
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- =========================================================================
+         Flash Message Alerts
+         ========================================================================= -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+                        {% if category == 'success' %}
+                            <i class="fa-solid fa-circle-check me-2"></i>
+                        {% elif category == 'danger' or category == 'error' %}
+                            <i class="fa-solid fa-circle-exclamation me-2"></i>
+                        {% elif category == 'warning' %}
+                            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- =========================================================================
+         Page Main Body Content
+         ========================================================================= -->
+    <main class="py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- =========================================================================
+         Footer
+         ========================================================================= -->
+    <footer>
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="text-white fw-bold d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-house-chimney-crack text-primary"></i> HomeHero
+                    </h5>
+                    <p class="small text-muted mb-3">
+                        On-demand hyperlocal marketplace connecting households with verified local service professionals within a 10km radius.
+                    </p>
+                    <span class="badge bg-dark border border-secondary text-light">College Major Project Demonstration</span>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6 class="text-white fw-bold mb-3">For Customers</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2">
+                        <li><a href="{{ url_for('customer.book_service') }}">Book a Service</a></li>
+                        <li><a href="{{ url_for('auth.register_customer') }}">Create Account</a></li>
+                        <li><a href="{{ url_for('customer.history') }}">Track Bookings</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6 class="text-white fw-bold mb-3">For Workers</h6>
+                    <ul class="list-unstyled small d-flex flex-column gap-2">
+                        <li><a href="{{ url_for('auth.register_worker') }}">Register as Worker</a></li>
+                        <li><a href="{{ url_for('worker.dashboard') }}">Worker Radar</a></li>
+                        <li><a href="{{ url_for('worker.jobs_history') }}">Earnings & Reviews</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h6 class="text-white fw-bold mb-3">Technical Highlights (Viva)</h6>
+                    <ul class="list-unstyled small text-muted d-flex flex-column gap-1">
+                        <li><i class="fa-solid fa-check text-success me-1"></i> Haversine Great-Circle Distance Algorithm</li>
+                        <li><i class="fa-solid fa-check text-success me-1"></i> Concurrency-Safe First-Worker Acceptance</li>
+                        <li><i class="fa-solid fa-check text-success me-1"></i> Privacy Shield (Data Unlocked Post-Assignment)</li>
+                        <li><i class="fa-solid fa-check text-success me-1"></i> Role-Based Access Control (Customer/Worker/Admin)</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center small text-muted">
+                <div>&copy; {{ now.year }} HomeHero Marketplace MVP. Built with Flask, SQLite, and Vanilla JS.</div>
+                <div>Demo Ready for Project Presentation</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

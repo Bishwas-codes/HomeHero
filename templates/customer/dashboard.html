@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Dashboard - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Welcome Header & Quick Book Action -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 bg-white p-4 rounded-4 border shadow-sm">
+        <div>
+            <span class="badge bg-primary-light text-primary px-3 py-1 rounded-pill fw-bold mb-1">Customer Portal</span>
+            <h2 class="fw-bold text-secondary mb-1">Welcome back, {{ current_user.name }}!</h2>
+            <p class="text-muted small mb-0"><i class="fa-solid fa-phone me-1"></i> {{ current_user.phone }} • <i class="fa-solid fa-envelope me-1"></i> {{ current_user.email }}</p>
+        </div>
+        <a href="{{ url_for('customer.book_service') }}" class="btn btn-primary-custom btn-lg px-4 shadow-sm">
+            <i class="fa-solid fa-plus-circle me-2"></i> Book New Service
+        </a>
+    </div>
+
+    <!-- Active Ongoing Request Alert Card (If Any) -->
+    {% if active_requests %}
+        <div class="mb-4">
+            <h5 class="fw-bold text-secondary mb-3 d-flex align-items-center gap-2">
+                <span class="spinner-grow spinner-grow-sm text-primary"></span>
+                Active Service Requests ({{ active_requests|length }})
+            </h5>
+
+            <div class="row g-3">
+                {% for req in active_requests %}
+                <div class="col-lg-6">
+                    <div class="card-custom p-4 bg-white border-2 border-primary shadow-sm h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-primary mb-1">{{ req.service.name }}</span>
+                                <span class="badge {{ req.status_badge_class() }}">{{ req.status.replace('_', ' ') }}</span>
+                            </div>
+                            <span class="text-muted small"><i class="fa-regular fa-clock me-1"></i> {{ req.created_at.strftime('%I:%M %p') }}</span>
+                        </div>
+
+                        <h5 class="fw-bold text-dark mb-1">{{ req.title }}</h5>
+                        <p class="text-muted small mb-3 text-truncate">{{ req.description }}</p>
+
+                        <div class="p-3 bg-light rounded-3 mb-3 small">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Location:</span>
+                                <span class="fw-semibold text-dark">{{ req.location_name or req.address }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Assigned Worker:</span>
+                                <span class="fw-bold text-primary">
+                                    {% if req.worker %}
+                                        <i class="fa-solid fa-user-check me-1"></i> {{ req.worker.name }} ({{ req.worker.worker_profile.rating_avg }}★)
+                                    {% else %}
+                                        <span class="text-warning"><i class="fa-solid fa-radar fa-spin me-1"></i> Searching for nearby worker...</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('customer.track_request', request_id=req.id) }}" class="btn btn-primary btn-sm flex-grow-1 fw-bold">
+                                <i class="fa-solid fa-location-crosshairs me-1"></i> View Live Tracking
+                            </a>
+                            {% if req.status == 'SEARCHING' %}
+                            <form action="{{ url_for('customer.cancel_request', request_id=req.id) }}" method="POST" onsubmit="return confirm('Cancel this request?');">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Cancel</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Metrics Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-primary-light text-primary">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ total_bookings }}</div>
+                    <div class="kpi-label">Total Bookings</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ active_count }}</div>
+                    <div class="kpi-label">In Progress</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-success-subtle text-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ completed_bookings }}</div>
+                    <div class="kpi-label">Completed</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-info-subtle text-info">
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">₹{{ total_spent|round|int }}</div>
+                    <div class="kpi-label">Total Spent</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Service Category Dispatch Grid -->
+    <div class="card-custom p-4 bg-white mb-4">
+        <h5 class="fw-bold text-secondary mb-3">Quick Book Popular Services</h5>
+        <div class="row g-3">
+            {% for cat in popular_categories %}
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('customer.book_service', service_id=cat.id) }}" class="service-card p-3">
+                    <div class="service-icon" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                        <i class="fa-solid {{ cat.icon }}"></i>
+                    </div>
+                    <h6 class="fw-bold mb-0 text-dark small text-truncate">{{ cat.name }}</h6>
+                    <span class="text-muted smaller">₹{{ cat.base_price|round|int }}</span>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Bookings Table -->
+    <div class="card-custom bg-white">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-list-check me-2 text-primary"></i> Recent Service Requests</span>
+            <a href="{{ url_for('customer.history') }}" class="btn btn-outline-custom btn-sm">View All History &rarr;</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted">
+                    <tr>
+                        <th>Req #</th>
+                        <th>Service</th>
+                        <th>Description</th>
+                        <th>Assigned Worker</th>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    {% for req in recent_requests %}
+                    <tr>
+                        <td class="fw-bold">#{{ req.id }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                <i class="fa-solid {{ req.service.icon }} text-primary me-1"></i> {{ req.service.name }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ req.title }}</div>
+                            <div class="text-muted smaller text-truncate" style="max-width: 220px;">{{ req.address }}</div>
+                        </td>
+                        <td>
+                            {% if req.worker %}
+                                <div class="fw-bold text-primary">{{ req.worker.name }}</div>
+                                <div class="smaller text-muted">{{ req.worker.phone }}</div>
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ req.created_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                        <td>
+                            <span class="badge {{ req.status_badge_class() }}">{{ req.status.replace('_', ' ') }}</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('customer.track_request', request_id=req.id) }}" class="btn btn-sm btn-outline-primary">
+                                Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            You have not made any service bookings yet. <a href="{{ url_for('customer.book_service') }}">Book your first service</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

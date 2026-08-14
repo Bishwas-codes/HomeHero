@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Overview - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Admin Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 bg-white p-4 rounded-4 border shadow-sm">
+        <div>
+            <span class="badge bg-danger text-white px-3 py-1 rounded-pill fw-bold mb-1"><i class="fa-solid fa-shield-halved me-1"></i> Admin Portal</span>
+            <h2 class="fw-bold text-secondary mb-1">Platform Operations Dashboard</h2>
+            <p class="text-muted small mb-0">System metrics, worker verification, booking pipeline, and revenue</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.workers') }}" class="btn btn-outline-custom btn-sm"><i class="fa-solid fa-users-gear me-1"></i> Manage Workers</a>
+            <a href="{{ url_for('admin.services') }}" class="btn btn-primary-custom btn-sm"><i class="fa-solid fa-plus me-1"></i> Add Service</a>
+        </div>
+    </div>
+
+    <!-- Admin KPI Cards (7 Metrics) -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-primary-light text-primary"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <div class="kpi-value">{{ total_customers }}</div>
+                    <div class="kpi-label">Customers</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-info-subtle text-info"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                <div>
+                    <div class="kpi-value">{{ total_workers }}</div>
+                    <div class="kpi-label">Total Workers</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-success-subtle text-success"><i class="fa-solid fa-signal"></i></div>
+                <div>
+                    <div class="kpi-value">{{ active_workers }}</div>
+                    <div class="kpi-label">Active / Online</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-warning-subtle text-warning"><i class="fa-solid fa-hourglass-half"></i></div>
+                <div>
+                    <div class="kpi-value">{{ pending_requests }}</div>
+                    <div class="kpi-label">Pending Searching</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-primary-subtle text-primary"><i class="fa-solid fa-gears"></i></div>
+                <div>
+                    <div class="kpi-value">{{ active_jobs }}</div>
+                    <div class="kpi-label">Active Ongoing Jobs</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-success-subtle text-success"><i class="fa-solid fa-circle-check"></i></div>
+                <div>
+                    <div class="kpi-value">{{ completed_jobs }}</div>
+                    <div class="kpi-label">Completed Jobs</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-danger-subtle text-danger"><i class="fa-solid fa-ban"></i></div>
+                <div>
+                    <div class="kpi-value">{{ cancelled_jobs }}</div>
+                    <div class="kpi-label">Cancelled Jobs</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-success-subtle text-success"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                <div>
+                    <div class="kpi-value">₹{{ total_volume|round|int }}</div>
+                    <div class="kpi-label">Gross Platform Vol</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Distribution & Recent Platform Bookings -->
+    <div class="row g-4 mb-4">
+        
+        <!-- Left: Category Distribution -->
+        <div class="col-lg-5">
+            <div class="card-custom bg-white shadow-sm h-100">
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-chart-pie me-2 text-primary"></i> Service Category Demand</span>
+                    <a href="{{ url_for('admin.services') }}" class="small text-primary text-decoration-none">Manage</a>
+                </div>
+                <div class="p-3">
+                    <div class="list-group list-group-flush small">
+                        {% for cat in category_stats %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                            <div>
+                                <i class="fa-solid {{ cat.icon }} text-primary me-2"></i>
+                                <span class="fw-bold text-dark">{{ cat.name }}</span>
+                                <span class="text-muted smaller ms-1">(Base ₹{{ cat.base_price|round|int }})</span>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ cat.request_count }} requests</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Recent Platform Requests Feed -->
+        <div class="col-lg-7">
+            <div class="card-custom bg-white shadow-sm h-100">
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i> Latest Service Activity</span>
+                    <a href="{{ url_for('admin.requests') }}" class="small text-primary text-decoration-none">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted">
+                            <tr>
+                                <th>Req #</th>
+                                <th>Service</th>
+                                <th>Customer</th>
+                                <th>Worker</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            {% for req in recent_requests %}
+                            <tr>
+                                <td class="fw-bold">#{{ req.id }}</td>
+                                <td>{{ req.service.name }}</td>
+                                <td>{{ req.customer.name }}</td>
+                                <td>
+                                    {% if req.worker %}
+                                        <span class="text-primary fw-semibold">{{ req.worker.name }}</span>
+                                    {% else %}
+                                        <span class="text-muted smaller">Searching...</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {{ req.status_badge_class() }}">{{ req.status.replace('_', ' ') }}</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No recent bookings recorded.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

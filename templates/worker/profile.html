@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Worker Profile & Skills - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <div class="mb-4">
+                <a href="{{ url_for('worker.dashboard') }}" class="text-decoration-none text-muted small">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Back to Radar
+                </a>
+                <h2 class="fw-bold text-secondary mt-1">Worker Profile & Skills</h2>
+                <p class="text-muted small">Manage your professional credentials, hourly rate, and service categories</p>
+            </div>
+
+            <div class="card-custom p-4 p-md-5 bg-white shadow-sm">
+                <form method="POST" action="{{ url_for('worker.profile') }}">
+                    
+                    <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">1. Personal & Contact Details</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Full Name</label>
+                            <input type="text" name="name" class="form-control" value="{{ current_user.name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Email Address</label>
+                            <input type="email" class="form-control bg-light" value="{{ current_user.email }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Phone Number</label>
+                            <input type="tel" name="phone" class="form-control" value="{{ current_user.phone }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Years of Experience</label>
+                            <input type="number" name="experience" class="form-control" value="{{ profile.experience_years }}" min="1" max="40" required>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">2. Services Offered</h5>
+                    <div class="row g-2 mb-4">
+                        {% set current_service_ids = profile.services|map(attribute='id')|list %}
+                        {% for cat in categories %}
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-check p-2 border rounded bg-light">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" name="services" value="{{ cat.id }}" id="cat_{{ cat.id }}" {% if cat.id in current_service_ids %}checked{% endif %}>
+                                <label class="form-check-label fw-semibold small text-dark" for="cat_{{ cat.id }}">
+                                    <i class="fa-solid {{ cat.icon }} text-primary me-1"></i> {{ cat.name }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">3. Rates & Bio</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Hourly Rate (₹)</label>
+                            <input type="number" name="hourly_rate" class="form-control" value="{{ profile.hourly_rate|round|int }}" step="50" min="100" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small">Professional Bio</label>
+                            <textarea name="bio" class="form-control" rows="3">{{ profile.bio }}</textarea>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 border-bottom pb-2">4. Base Area / Coordinates</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Select Demo Area</label>
+                            <select class="form-select" id="demo-location-select">
+                                <option value="">-- Change Preset Location --</option>
+                                {% for loc in demo_locations %}
+                                    <option value="{{ loc.name }}" data-lat="{{ loc.lat }}" data-lng="{{ loc.lng }}" data-name="{{ loc.name }}">
+                                        {{ loc.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Location Name</label>
+                            <input type="text" name="location_name" id="location-name-input" class="form-control" value="{{ profile.location_name }}" required>
+                        </div>
+                        <input type="hidden" name="latitude" id="latitude-input" value="{{ profile.latitude }}">
+                        <input type="hidden" name="longitude" id="longitude-input" value="{{ profile.longitude }}">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2 fw-bold">
+                        <i class="fa-solid fa-floppy-disk me-2"></i> Save Worker Profile
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

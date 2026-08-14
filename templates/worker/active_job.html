@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Active Job #{{ job.id }} Console - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{{ url_for('worker.dashboard') }}" class="text-decoration-none text-muted small">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back to Radar
+                    </a>
+                    <h2 class="fw-bold text-secondary mt-1 mb-0">Active Job Console #{{ job.id }}</h2>
+                </div>
+                <span class="badge {{ job.status_badge_class() }} fs-6 px-3 py-2">
+                    {{ job.status.replace('_', ' ') }}
+                </span>
+            </div>
+
+            <!-- Stepper Progress Tracker -->
+            <div class="card-custom p-4 bg-white mb-4 shadow-sm">
+                <div class="stepper mb-2">
+                    <!-- Step 1: Assigned -->
+                    <div class="step-item completed">
+                        <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                        <div class="step-label">Job Accepted</div>
+                    </div>
+                    <!-- Step 2: On The Way -->
+                    <div class="step-item {% if job.status in ['ON_THE_WAY', 'IN_PROGRESS', 'COMPLETED'] %}completed{% elif job.status == 'ASSIGNED' %}active{% endif %}">
+                        <div class="step-icon"><i class="fa-solid fa-motorcycle"></i></div>
+                        <div class="step-label">On The Way</div>
+                    </div>
+                    <!-- Step 3: In Progress -->
+                    <div class="step-item {% if job.status in ['IN_PROGRESS', 'COMPLETED'] %}completed{% elif job.status == 'ON_THE_WAY' %}active{% endif %}">
+                        <div class="step-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                        <div class="step-label">In Progress</div>
+                    </div>
+                    <!-- Step 4: Completed -->
+                    <div class="step-item {% if job.status == 'COMPLETED' %}completed{% endif %}">
+                        <div class="step-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+                        <div class="step-label">Completed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unlocked Customer Contact & Address (Privacy Shield Deactivated) -->
+            <div class="card-custom p-4 bg-white shadow-md mb-4 border-success border-2">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-success text-white px-3 py-1 rounded-pill fw-bold">
+                        <i class="fa-solid fa-lock-open me-1"></i> Customer Details Unlocked
+                    </span>
+                    <span class="distance-badge">
+                        <i class="fa-solid fa-location-dot"></i> ~{{ distance }} km from your base
+                    </span>
+                </div>
+
+                <div class="row g-3 align-items-center mb-4">
+                    <div class="col-md-7">
+                        <h4 class="fw-bold text-dark mb-1">{{ job.customer.name }}</h4>
+                        <div class="text-muted small mb-2"><i class="fa-solid fa-envelope me-1"></i> {{ job.customer.email }}</div>
+                        <div class="p-3 bg-light rounded-3 text-dark small border">
+                            <span class="text-muted d-block small">Service Delivery Address:</span>
+                            <strong class="fs-6">{{ job.address }}</strong>
+                            <div class="text-muted smaller mt-1">Area: {{ job.location_name or 'Local Area' }} (Lat: {{ job.latitude }}, Lng: {{ job.longitude }})</div>
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-md-end">
+                        <a href="tel:{{ job.customer.phone }}" class="btn btn-success btn-lg w-100 fw-bold mb-2 shadow-sm">
+                            <i class="fa-solid fa-phone me-2"></i> Call Customer ({{ job.customer.phone }})
+                        </a>
+                        <span class="text-muted smaller d-block text-center">Tap to call for directions or arrival note</span>
+                    </div>
+                </div>
+
+                <!-- Job Task Details -->
+                <div class="p-3 bg-light rounded-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold text-primary"><i class="fa-solid {{ job.service.icon }} me-1"></i> {{ job.service.name }}</span>
+                        <span class="fw-bold text-success">Payable: ₹{{ job.budget|round|int if job.budget else job.service.base_price|round|int }}</span>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-1">{{ job.title }}</h6>
+                    <p class="text-muted small mb-0">{{ job.description }}</p>
+                </div>
+            </div>
+
+            <!-- Worker State Transition Action Console -->
+            <div class="card-custom p-4 bg-white shadow-md mb-4 text-center">
+                <h5 class="fw-bold text-secondary mb-3">Update Service Progress</h5>
+
+                {% if job.status == 'ASSIGNED' %}
+                    <p class="text-muted small mb-3">Notify the customer that you have started traveling to their location:</p>
+                    <form action="{{ url_for('worker.update_status', request_id=job.id, new_status='ON_THE_WAY') }}" method="POST">
+                        <button type="submit" class="btn btn-primary-custom btn-lg w-100 py-3 fw-bold shadow-sm">
+                            <i class="fa-solid fa-motorcycle me-2"></i> Mark "On The Way"
+                        </button>
+                    </form>
+
+                {% elif job.status == 'ON_THE_WAY' %}
+                    <p class="text-muted small mb-3">Notify the customer that you have arrived and are beginning work:</p>
+                    <form action="{{ url_for('worker.update_status', request_id=job.id, new_status='IN_PROGRESS') }}" method="POST">
+                        <button type="submit" class="btn btn-info text-white btn-lg w-100 py-3 fw-bold shadow-sm">
+                            <i class="fa-solid fa-screwdriver-wrench me-2"></i> Mark "Service Started"
+                        </button>
+                    </form>
+
+                {% elif job.status == 'IN_PROGRESS' %}
+                    <p class="text-muted small mb-3">Once all repairs are done and tested with the customer:</p>
+                    <form action="{{ url_for('worker.update_status', request_id=job.id, new_status='COMPLETED') }}" method="POST" onsubmit="return confirm('Confirm that work is finished and payment is settled?');">
+                        <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold shadow-sm">
+                            <i class="fa-solid fa-circle-check me-2"></i> Mark "Service Completed"
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

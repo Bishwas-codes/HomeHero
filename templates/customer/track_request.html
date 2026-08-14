@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Request #{{ req.id }} Live Status - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{{ url_for('customer.dashboard') }}" class="text-decoration-none text-muted small">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                    <h2 class="fw-bold text-secondary mt-1 mb-0">Booking #{{ req.id }} Tracking</h2>
+                </div>
+                <span class="badge {{ req.status_badge_class() }} fs-6 px-3 py-2">
+                    {{ req.status.replace('_', ' ') }}
+                </span>
+            </div>
+
+            <!-- Stepper Progress Tracker -->
+            <div class="card-custom p-4 bg-white mb-4 shadow-sm">
+                <div class="stepper mb-2">
+                    <!-- Step 1: Created / Searching -->
+                    <div class="step-item {% if req.status in ['SEARCHING', 'ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS', 'COMPLETED'] %}completed{% endif %}">
+                        <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                        <div class="step-label">Requested</div>
+                    </div>
+                    <!-- Step 2: Assigned -->
+                    <div class="step-item {% if req.status in ['ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS', 'COMPLETED'] %}completed{% elif req.status == 'SEARCHING' %}active{% endif %}">
+                        <div class="step-icon">
+                            {% if req.status == 'SEARCHING' %}
+                                <i class="fa-solid fa-radar fa-spin"></i>
+                            {% else %}
+                                <i class="fa-solid fa-user-check"></i>
+                            {% endif %}
+                        </div>
+                        <div class="step-label">Assigned</div>
+                    </div>
+                    <!-- Step 3: On The Way -->
+                    <div class="step-item {% if req.status in ['ON_THE_WAY', 'IN_PROGRESS', 'COMPLETED'] %}completed{% elif req.status == 'ASSIGNED' %}active{% endif %}">
+                        <div class="step-icon"><i class="fa-solid fa-motorcycle"></i></div>
+                        <div class="step-label">On The Way</div>
+                    </div>
+                    <!-- Step 4: In Progress -->
+                    <div class="step-item {% if req.status in ['IN_PROGRESS', 'COMPLETED'] %}completed{% elif req.status == 'ON_THE_WAY' %}active{% endif %}">
+                        <div class="step-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                        <div class="step-label">In Progress</div>
+                    </div>
+                    <!-- Step 5: Completed -->
+                    <div class="step-item {% if req.status == 'COMPLETED' %}completed{% endif %}">
+                        <div class="step-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+                        <div class="step-label">Completed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic State Card based on Status -->
+            {% if req.status == 'SEARCHING' %}
+                <!-- SEARCHING STATE: Radar Animation -->
+                <div class="card-custom p-5 bg-white text-center shadow-md mb-4 border-warning">
+                    <div class="radar-pulse">
+                        <div class="radar-circle">
+                            <i class="fa-solid fa-satellite-dish"></i>
+                        </div>
+                        <div class="radar-wave"></div>
+                        <div class="radar-wave"></div>
+                    </div>
+
+                    <h4 class="fw-bold text-secondary mb-2">Searching for Nearby Active Workers...</h4>
+                    <p class="text-muted small mb-4" style="max-width: 500px; margin: 0 auto;">
+                        Your {{ req.service.name }} request has been dispatched to eligible service providers within a 10 km radius. The first worker to accept will be assigned immediately.
+                    </p>
+
+                    <div class="alert alert-info d-inline-block text-start small mb-4">
+                        <i class="fa-solid fa-info-circle me-1"></i> <strong>Live Polling Active:</strong> This screen automatically updates as soon as a worker clicks Accept. No need to refresh!
+                    </div>
+
+                    <div>
+                        <form action="{{ url_for('customer.cancel_request', request_id=req.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                            <button type="submit" class="btn btn-outline-danger px-4">
+                                <i class="fa-solid fa-xmark me-1"></i> Cancel Service Request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            {% elif req.status in ['ASSIGNED', 'ON_THE_WAY', 'IN_PROGRESS'] %}
+                <!-- ASSIGNED / ACTIVE STATE: Worker Details Card -->
+                <div class="card-custom p-4 bg-white shadow-md mb-4 border-primary">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-bold">
+                            <i class="fa-solid fa-circle-check me-1"></i> Worker Assigned
+                        </span>
+                        {% if worker_distance is not none %}
+                            <span class="distance-badge">
+                                <i class="fa-solid fa-location-dot"></i> ~{{ worker_distance }} km away
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-3 p-3 bg-light rounded-3 mb-4">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 64px; height: 64px;">
+                            {{ req.worker.name[0] }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4 class="fw-bold text-dark mb-1">{{ req.worker.name }}</h4>
+                            <div class="d-flex flex-wrap gap-2 align-items-center text-muted small">
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fa-solid fa-star text-dark"></i> {{ req.worker.worker_profile.rating_avg }} ({{ req.worker.worker_profile.rating_count }} reviews)
+                                </span>
+                                <span>•</span>
+                                <span><i class="fa-solid fa-briefcase me-1"></i> {{ req.worker.worker_profile.experience_years }} yrs exp</span>
+                                <span>•</span>
+                                <span><i class="fa-solid fa-screwdriver-wrench me-1"></i> {{ req.service.name }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="tel:{{ req.worker.phone }}" class="btn btn-success fw-bold px-3">
+                                <i class="fa-solid fa-phone me-1"></i> Call Worker
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Current Step Status Banner -->
+                    <div class="p-3 rounded-3 {% if req.status == 'ON_THE_WAY' %}bg-primary text-white{% elif req.status == 'IN_PROGRESS' %}bg-info text-white{% else %}bg-light text-dark border{% endif %} mb-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid {% if req.status == 'ON_THE_WAY' %}fa-motorcycle{% elif req.status == 'IN_PROGRESS' %}fa-screwdriver-wrench{% else %}fa-user-check{% endif %} fs-4"></i>
+                            <div>
+                                <div class="fw-bold">
+                                    {% if req.status == 'ASSIGNED' %}
+                                        Worker Accepted - Getting ready to depart
+                                    {% elif req.status == 'ON_THE_WAY' %}
+                                        Worker is On The Way to your address
+                                    {% elif req.status == 'IN_PROGRESS' %}
+                                        Worker has arrived and is currently performing the service
+                                    {% endif %}
+                                </div>
+                                <div class="smaller opacity-75">
+                                    Accepted at {{ req.accepted_at.strftime('%I:%M %p') if req.accepted_at else 'recently' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% elif req.status == 'COMPLETED' %}
+                <!-- COMPLETED STATE: Summary & Review Form -->
+                <div class="card-custom p-4 bg-white shadow-md mb-4 border-success">
+                    <div class="text-center mb-4">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <h3 class="fw-bold text-success">Service Completed!</h3>
+                        <p class="text-muted small">Work was completed at {{ req.completed_at.strftime('%d %b %Y, %I:%M %p') if req.completed_at else 'recently' }}</p>
+                    </div>
+
+                    <!-- Review Submission or Display -->
+                    {% if existing_review %}
+                        <div class="p-4 bg-light rounded-3 text-center border">
+                            <h5 class="fw-bold mb-2">Your Rating & Review</h5>
+                            <div class="text-warning fs-4 mb-2">
+                                {% for i in range(existing_review.rating) %}
+                                    <i class="fa-solid fa-star"></i>
+                                {% endfor %}
+                                {% for i in range(5 - existing_review.rating) %}
+                                    <i class="fa-regular fa-star text-muted"></i>
+                                {% endfor %}
+                            </div>
+                            <p class="text-dark mb-0 fst-italic">"{{ existing_review.comment }}"</p>
+                            <span class="text-muted smaller">Submitted on {{ existing_review.created_at.strftime('%d %b %Y') }}</span>
+                        </div>
+                    {% else %}
+                        <div class="p-4 bg-light rounded-3 border">
+                            <h5 class="fw-bold text-secondary mb-3 text-center">Rate Your Experience with {{ req.worker.name }}</h5>
+                            
+                            <form action="{{ url_for('customer.submit_review', request_id=req.id) }}" method="POST">
+                                <div class="text-center mb-3">
+                                    <label class="form-label fw-semibold small d-block mb-1">Select Star Rating</label>
+                                    <div class="star-rating">
+                                        <input type="radio" id="star5" name="rating" value="5" required checked><label for="star5" title="5 stars"><i class="fa-solid fa-star"></i></label>
+                                        <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4 stars"><i class="fa-solid fa-star"></i></label>
+                                        <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3 stars"><i class="fa-solid fa-star"></i></label>
+                                        <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2 stars"><i class="fa-solid fa-star"></i></label>
+                                        <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1 star"><i class="fa-solid fa-star"></i></label>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small">Feedback Comments</label>
+                                    <textarea name="comment" class="form-control" rows="3" placeholder="Share your experience (e.g., Punctual, quality work, fair pricing, clean cleanup)..." required></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary-custom w-100 py-2 fw-bold">
+                                    <i class="fa-solid fa-star me-1"></i> Submit Review & Rating
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+
+            {% elif req.status == 'CANCELLED' %}
+                <!-- CANCELLED STATE -->
+                <div class="card-custom p-4 bg-white text-center shadow-sm mb-4 border-danger">
+                    <i class="fa-solid fa-circle-xmark text-danger fs-1 mb-2"></i>
+                    <h4 class="fw-bold text-danger">Service Request Cancelled</h4>
+                    <p class="text-muted small">
+                        Reason: {{ req.cancellation_reason or 'Cancelled by user' }}
+                    </p>
+                    <a href="{{ url_for('customer.book_service') }}" class="btn btn-primary btn-sm">Book Another Service</a>
+                </div>
+            {% endif %}
+
+            <!-- Booking Order Details Card -->
+            <div class="card-custom p-4 bg-white shadow-sm">
+                <h5 class="fw-bold text-secondary mb-3 border-bottom pb-2">Booking Summary</h5>
+                <div class="row g-3 small">
+                    <div class="col-sm-6">
+                        <span class="text-muted">Service Category:</span>
+                        <div class="fw-bold text-dark"><i class="fa-solid {{ req.service.icon }} text-primary me-1"></i> {{ req.service.name }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-muted">Estimated Budget:</span>
+                        <div class="fw-bold text-success">₹{{ req.budget|round|int if req.budget else req.service.base_price|round|int }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-muted">Location / Area:</span>
+                        <div class="fw-semibold text-dark">{{ req.location_name or 'Local Area' }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-muted">Coordinates:</span>
+                        <div class="fw-mono text-muted">{{ req.latitude }}, {{ req.longitude }}</div>
+                    </div>
+                    <div class="col-12">
+                        <span class="text-muted">Complete Address:</span>
+                        <div class="fw-semibold text-dark">{{ req.address }}</div>
+                    </div>
+                    <div class="col-12">
+                        <span class="text-muted">Problem Description:</span>
+                        <div class="p-2 bg-light rounded text-dark">{{ req.description }}</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/customer_live.js') }}"></script>
+<script>
+    // Initialize real-time status polling for this request
+    document.addEventListener('DOMContentLoaded', () => {
+        initCustomerLiveTracking({{ req.id }}, "{{ req.status }}");
+    });
+</script>
+{% endblock %}

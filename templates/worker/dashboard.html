@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Worker Dashboard & Radar - HomeHero{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Worker Profile Header & Availability Switch -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 bg-white p-4 rounded-4 border shadow-sm">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 60px; height: 60px;">
+                {{ current_user.name[0] }}
+            </div>
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <h2 class="fw-bold text-secondary mb-0">{{ current_user.name }}</h2>
+                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-star"></i> {{ profile.rating_avg }}</span>
+                </div>
+                <div class="text-muted small mt-1">
+                    <span><i class="fa-solid fa-location-dot me-1"></i> Base: {{ profile.location_name }}</span> • 
+                    <span><i class="fa-solid fa-briefcase me-1"></i> {{ profile.experience_years }} yrs exp</span> • 
+                    <span class="text-primary fw-semibold">₹{{ profile.hourly_rate|round|int }}/hr</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Availability Toggle Switch -->
+        <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-3 border">
+            <div>
+                <div class="fw-bold small {% if profile.is_available %}text-success{% else %}text-danger{% endif %}">
+                    <i class="fa-solid fa-circle me-1 small"></i>
+                    Status: {{ 'ONLINE (Receiving Requests)' if profile.is_available else 'OFFLINE (Paused)' }}
+                </div>
+                <div class="text-muted smaller">Toggle to accept nearby jobs</div>
+            </div>
+            <form action="{{ url_for('worker.toggle_availability') }}" method="POST">
+                <button type="submit" class="btn btn-sm {% if profile.is_available %}btn-success{% else %}btn-outline-secondary{% endif %} fw-bold px-3">
+                    {{ 'Online' if profile.is_available else 'Go Online' }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Active Ongoing Job Alert Card (If Worker Has An Assigned Job) -->
+    {% if active_job %}
+    <div class="card-custom p-4 bg-white border-2 border-primary shadow-md mb-4" id="active-job-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="badge bg-primary text-white px-3 py-1 rounded-pill fw-bold">
+                <i class="fa-solid fa-spinner fa-spin me-1"></i> Active Ongoing Job
+            </span>
+            <span class="badge {{ active_job.status_badge_class() }} fs-6">
+                {{ active_job.status.replace('_', ' ') }}
+            </span>
+        </div>
+
+        <div class="row align-items-center g-3">
+            <div class="col-md-8">
+                <h4 class="fw-bold text-dark mb-1">{{ active_job.title }}</h4>
+                <p class="text-muted small mb-2">{{ active_job.description }}</p>
+                <div class="p-2 bg-light rounded text-dark small">
+                    <i class="fa-solid fa-location-dot text-danger me-1"></i> Customer Address: <strong>{{ active_job.address }}</strong>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{{ url_for('worker.active_job') }}" class="btn btn-primary-custom btn-lg w-100 fw-bold">
+                    <i class="fa-solid fa-arrow-right me-1"></i> Open Job Workspace
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Worker KPI Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ profile.rating_avg }} <span class="fs-6 text-muted">/5</span></div>
+                    <div class="kpi-label">{{ profile.rating_count }} Ratings</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-success-subtle text-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ profile.total_jobs_completed or 0 }}</div>
+                    <div class="kpi-label">Jobs Done</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-info-subtle text-info">
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">₹{{ total_earnings|round|int }}</div>
+                    <div class="kpi-label">Total Earnings</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-primary-light text-primary">
+                    <i class="fa-solid fa-radar"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ incoming_requests|length }}</div>
+                    <div class="kpi-label">Radar Jobs</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace: Incoming Live Radar Feed vs Completed Jobs -->
+    <div class="row g-4">
+        
+        <!-- Left: Incoming Nearby Service Requests Feed (Auto-Polling) -->
+        <div class="col-lg-7">
+            <div class="card-custom p-4 bg-white shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="spinner-grow spinner-grow-sm text-primary"></span>
+                        <h5 class="fw-bold text-secondary mb-0">Nearby Job Radar (Within 10 km)</h5>
+                    </div>
+                    <span class="badge bg-light text-muted border small">Live Polling Active</span>
+                </div>
+                
+                <p class="text-muted smaller mb-3">
+                    <i class="fa-solid fa-shield-halved text-success me-1"></i>
+                    <strong>Information Privacy:</strong> Customer full address and phone number are revealed only after you accept the request.
+                </p>
+
+                <!-- Incoming Cards Container (Populated via Jinja + Live JS Polling) -->
+                <div id="incoming-requests-container">
+                    {% for item in incoming_requests %}
+                    {% set r = item.req %}
+                    <div class="incoming-request-card" id="req-card-{{ r.id }}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-primary me-2">{{ r.service.name }}</span>
+                                <span class="distance-badge"><i class="fa-solid fa-location-arrow"></i> {{ item.distance }} km away</span>
+                            </div>
+                            <span class="text-muted small"><i class="fa-regular fa-clock me-1"></i> {{ r.created_at.strftime('%I:%M %p') }}</span>
+                        </div>
+                        <h5 class="fw-bold mb-1 text-dark">{{ r.title }}</h5>
+                        <p class="text-muted mb-2 small">{{ r.description }}</p>
+                        
+                        <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                            <div>
+                                <span class="text-muted small">Area: <strong>{{ r.location_name or 'Nearby Location' }}</strong></span><br>
+                                <span class="text-success fw-bold">Est. Budget: ₹{{ r.budget|round|int if r.budget else r.service.base_price|round|int }}</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <form action="{{ url_for('worker.reject_request', request_id=r.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Decline</button>
+                                </form>
+                                <form action="{{ url_for('worker.accept_request', request_id=r.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-success fw-bold px-3">
+                                        <i class="fa-solid fa-check me-1"></i> Accept Job
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Empty State Message -->
+                <div id="no-requests-msg" class="text-center py-5 text-muted" {% if incoming_requests %}style="display: none;"{% endif %}>
+                    <div class="radar-pulse mb-3" style="width: 60px; height: 60px;">
+                        <div class="radar-circle" style="font-size: 1.4rem;"><i class="fa-solid fa-satellite-dish"></i></div>
+                        <div class="radar-wave"></div>
+                    </div>
+                    <h6 class="fw-bold">Radar is Scanning for Requests...</h6>
+                    <p class="smaller text-muted" style="max-width: 380px; margin: 0 auto;">
+                        When a customer posts a service request matching your skills in your 10 km area, it will appear here immediately.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Right: Services Offered & Recent Completed Jobs -->
+        <div class="col-lg-5">
+            <!-- Services Offered Card -->
+            <div class="card-custom p-4 bg-white shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-secondary mb-0">Your Active Services</h6>
+                    <a href="{{ url_for('worker.profile') }}" class="small text-primary text-decoration-none">Edit</a>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for s in profile.services %}
+                    <span class="badge bg-light text-dark border p-2">
+                        <i class="fa-solid {{ s.icon }} text-primary me-1"></i> {{ s.name }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recent Completed Jobs -->
+            <div class="card-custom p-4 bg-white shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-secondary mb-0">Recent Completed Jobs</h6>
+                    <a href="{{ url_for('worker.jobs_history') }}" class="small text-primary text-decoration-none">View All</a>
+                </div>
+
+                <div class="list-group list-group-flush small">
+                    {% for j in completed_jobs %}
+                    <div class="list-group-item px-0 py-2">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold text-dark">{{ j.service.name }}</span>
+                            <span class="text-success fw-bold">+₹{{ j.budget|round|int if j.budget else j.service.base_price|round|int }}</span>
+                        </div>
+                        <div class="text-muted smaller">{{ j.title }}</div>
+                        <div class="text-muted smaller"><i class="fa-regular fa-clock me-1"></i> {{ j.completed_at.strftime('%d %b, %I:%M %p') if j.completed_at else 'Recent' }}</div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3 smaller">
+                        No completed jobs yet. Accept a request from your radar!
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/worker_feed.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initWorkerLiveRadar();
+    });
+</script>
+{% endblock %}
