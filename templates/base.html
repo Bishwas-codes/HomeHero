@@ -19,6 +19,8 @@
     <!-- Custom Application CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block extra_css %}{% endblock %}
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 </head>
 <body>
 
@@ -192,8 +194,8 @@
     <!-- =========================================================================
          Footer
          ========================================================================= -->
-    <footer>
-        <div class="container">
+   <footer class="custom-footer py-5 mt-auto">
+       <div class="container">
             <div class="row g-4">
                 <div class="col-lg-4">
                     <h5 class="text-white fw-bold d-flex align-items-center gap-2">

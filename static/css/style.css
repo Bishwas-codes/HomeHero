@@ -448,20 +448,51 @@ main {
 /* --------------------------------------------------------------------------
    Footer
    -------------------------------------------------------------------------- */
-footer {
-  background: #0f172a;
-  color: #94a3b8;
-  padding: 2.5rem 0 1.5rem 0;
-  border-top: 1px solid #1e293b;
-  margin-top: auto;
+/* Custom Footer Styling */
+footer, .footer {
+    background-color: #1e293b !important; /* Dark slate background */
+    color: #f8fafc !important;            /* Light text color */
+    padding: 24px 0;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-footer a {
-  color: #cbd5e1;
-  text-decoration: none;
-  transition: color 0.2s;
+/* Ensure footer links are legible */
+footer a, .footer a {
+    color: #38bdf8 !important;            /* Accent blue for links */
+    text-decoration: none;
 }
 
-footer a:hover {
-  color: var(--primary-light);
+footer a:hover, .footer a:hover {
+    text-decoration: underline;
+}
+
+/* Ensure subtle text/copyright is clear */
+footer p, footer span, .footer p, .footer span {
+    color: #cbd5e1 !important;
+}
+
+
+/* Custom Footer Color & Styling */
+.custom-footer {
+    background: linear-gradient(180deg, #111827 0%, #0b0f19 100%); /* Deep charcoal / dark background */
+    color: #94a3b8;
+    border-top: 1px solid #1f2937;
+}
+
+/* Link colors inside footer */
+.custom-footer a {
+    color: #94a3b8;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+
+.custom-footer a:hover {
+    color: #38bdf8; /* Highlight color on hover */
+    text-decoration: underline;
+}
+
+/* Muted text readability */
+.custom-footer .text-muted {
+    color: #64748b !important;
 }
